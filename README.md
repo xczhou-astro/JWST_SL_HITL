@@ -1,65 +1,41 @@
-# SL_discovery_by_HITL
+# JWST Strong-Lens Search
 
-Relevant codes for strong lensing discovery by human-in-the-loop (HITL) method.  
-HITL requires interaction between human and machine, where a simple website can be employed.  
+This repository contains the code and catalogue associated with our search for galaxy-scale strong-lens candidates in JWST imaging. The workflow combines self-supervised representation learning, human-in-the-loop (HITL) candidate selection, nearest-neighbour retrieval, and expert visual inspection.
 
-This website can be employed to discover strong gravitational lensing (or other rare objects) without baseline training data.  
+## Repository structure
 
-The pipeline was successfully tested, and we are currently preparing the draft.  Detailed information on the method will be added when finishing the draft. 
+### `HITL/`
 
-## Results
+The `HITL` directory contains the web application used for human-in-the-loop candidate selection. During each iteration, the classifier ranks sources using their learned representations, and the website presents selected images for human labelling. The accumulated positive and negative labels are then used to update the classifier for the next round.
 
-Will be updated soon.
+### `BYOL/`
 
-## Dataset
+The `BYOL` directory contains the Bootstrap Your Own Latent (BYOL) implementation used for self-supervised representation learning. It learns morphological representations from galaxy images without requiring class labels. These representations are subsequently used for nearest-neighbour retrieval of sources resembling the human-selected strong-lens candidates.
 
-Will be updated soon.
+### `VI/`
 
-## Dependencies
+The `VI` directory contains the program used for the final visual inspection. Candidate systems are independently assessed by strong-lensing experts, and their grades are combined into a visual-inspection score.
 
-``
-python >= 3.12  
-numpy  
-torch  
-astropy  
-pandas  
-matplotlib  
-scipy  
-joblib  
-tqdm  
-flask  
-``
+## Candidate catalogue
 
-## The appearance of the website
+The final visually inspected candidate catalogue is provided in [`strong_lens_candidate_catalogue.csv`](./strong_lens_candidate_catalogue.csv). It contains 1,697 inspected sources. These entries are strong-lens candidates rather than spectroscopically or lens-model confirmed systems.
 
-### Detector page
-![The appearance of the website](./assets/detector_page.png)  
+The catalogue contains the following columns:
 
-The head shows the current round, the number of strong lensing (SL) sources, including data matched from other research, the number of non-strong lensing (non-SL) sources, the number of available sources, and the total number of submissions.  
+| Column | Description |
+| --- | --- |
+| `name` | Unique source identifier. |
+| `grades` | Grades assigned independently by the eight visual inspectors. Each character records the grade from one inspector. |
+| `score` | Combined visual-inspection score. Grades A, B/S, and U/X contribute 2, 1, and 0 points, respectively. The maximum possible score is 16. |
+| `ra` | Right ascension in decimal degrees (ICRS). |
+| `dec` | Declination in decimal degrees (ICRS). |
+| `ABmag_F444W` | Source AB magnitude in the JWST/NIRCam F444W band. |
+| `has_COWLS_counterpart` | Whether a positional counterpart is found in the COSMOS-Web Lens Survey (COWLS) catalogue. |
+| `within_COWLS_footprint` | Whether the source lies within the COWLS survey footprint. |
+| `code_COWLS` | Identifier or classification code of the matched COWLS source; blank when no counterpart is found. |
 
-The middle part shows the model results of current round. *Left panel*: score distribution for SL and non-SL sources, which are normalized respectively. The dividing threshold is calculated using Gaussian Mixture Model (GMM) and shown by red dashed line. *Right panel*: scores vs. number of samples. Simiarly, the dividing threshold is shown by red dashed line. Additionally, the minimum score for candidates of COWLS and selected SL sources are shown by orange dashed line and purple dash-dotted line respectively. The positions for them are also marked by red dots and purple stars respectively. 
+In this work, sources with `score > 4` form the higher-scoring candidate sample. Of these 53 candidates, 23 have COWLS counterparts, 15 lie within the COWLS footprint but have no positional counterpart, and 15 are located outside the COWLS footprint.
 
-Behind the model results, the source images are shown in a 2 * 5 grid. Source name and score are shown on the lower-left and higher-right corner of each image. Left-click on on image mask it as non-SL, right-click displays popup window, rendering enlarged image for detailed inspection.
+## Citation
 
-At the bottom, the "Submit" and "Gallery" buttons are shown. The "Submit" button need to be clicked to submit the selections. Once the submissions reaches a certain number controled by configurations in `configurations.py`, the model will be trained on the postive and negative samples. The "Gallery" button redirects to the gallery page.
-
-### Gallery page
-![The appearance of the website](./assets/gallery_page.png)  
-
-The gallery page shows the SL and non-SL sources in 2 * 5 grid. SL ones include sources from COWLS and selected SL ones. For COWLS ones, the grades and source names are displayed. 
-
-## Usage
-
-``Python
-python app.py 
-``
-
-The website will start at the default port 6543, while the logging and results will be saved in the `results` directory.
-
-For more detailed usage, please modify the configurations in `configurations.py`, which are self-explanatory. Here we explain some difficult-to-understand configurations:  
-`supplement_ratio`: the ratio of supplement images instead of only high-score ones shown in each page;  
-`supplement_method`: the method to select supplement images, can be `threshold` or `uncertainty`. The former selects the supplement images by the distance to the dividing threshold, while the latter selects them by the uncertainty derived from the ensemble network;  
-`num_submission_train`: the number of submissions required to train the model;  
-`fix_ensembles`: if True, the number of ensembles will equal to the `maximum_ensemble_size`, otherwise, the number of ensembles increases by one after each training round, and the oldest ensemble will be removed when the number of ensembles exceeds `maximum_ensemble_size`;  
-`checkpoint_round`: the round to resume from. If not None, the model will be loaded from the checkpoint and the training will resume from the next round.  
-
+If you use the code or catalogue, please cite the accompanying paper. Citation information will be added following publication.
